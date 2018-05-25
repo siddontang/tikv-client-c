@@ -1,0 +1,31 @@
+cmake_minimum_required(VERSION 3.0)
+
+project(tikv-c-client VERSION 0.1)
+
+add_definitions(-std=c++11)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+
+include(FindProtobuf)
+find_package(Protobuf REQUIRED)
+include_directories(${PROTOBUF_INCLUDE_DIR})
+
+include(FindGRPC)
+find_package(GRPC REQUIRED)
+include_directories(${GRPC_INCLUDE_DIR})
+
+aux_source_directory(proto PROTO_SRCS)
+aux_source_directory(proto/gogoproto GOGO_PROTO_SRCS)
+
+include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/proto)
+
+add_library(tikv_proto SHARED ${PROTO_SRCS} ${GOGO_PROTO_SRCS})
+target_link_libraries(tikv_proto 
+    ${GRPC_LIBRARIES}
+    ${PROTOBUF_LIBRARY})
+
+add_executable(pd_example example/pd.cc)
+target_link_libraries(pd_example 
+    tikv_proto
+    ${GRPC_LIBRARIES}
+    ${PROTOBUF_LIBRARY})
